@@ -351,9 +351,7 @@ pub mod rt {
         cmd.arg(in_path)
             .arg("--verbose")
             .arg("-o").arg(out_path)
-            .arg("--crate-type=bin")
-            .arg("-L").arg(target_dir)
-            .arg("-L").arg(&deps_dir);
+            .arg("--crate-type=bin");
 
         for dep in fs::read_dir(deps_dir).expect("failed to access target/*/deps") {
             let dep = dep.expect("failed to read files from target/*/deps");
