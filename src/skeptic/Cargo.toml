@@ -21,7 +21,7 @@ glob = "0.2"
 walkdir = "2.0"
 serde_json = "1.0.3"
 cargo_metadata = "0.3"
-bytecount = "0.2.0"
+bytecount = "0.3.0"
 handlebars = "=1.0.0-beta.1"
 failure = "0.1"
 

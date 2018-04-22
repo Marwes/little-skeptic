@@ -116,10 +116,8 @@ where
     out_file.push("skeptic-tests.rs");
 
     let config = Config {
-        out_dir: PathBuf::from(out_dir),
         root_dir: PathBuf::from(cargo_manifest_dir),
         out_file: out_file,
-        target_triple: env::var("TARGET").expect("could not get target triple"),
         docs: docs,
     };
 
@@ -127,10 +125,8 @@ where
 }
 
 struct Config {
-    out_dir: PathBuf,
     root_dir: PathBuf,
     out_file: PathBuf,
-    target_triple: String,
     docs: Vec<String>,
 }
 
@@ -329,6 +325,7 @@ fn load_templates(path: &Path) -> Result<(HashMap<String, String>, Option<String
 }
 
 fn sanitize_test_name(s: &str) -> String {
+    #[allow(unused)]
     use std::ascii::AsciiExt;
     s.to_ascii_lowercase()
         .chars()
@@ -464,7 +461,7 @@ fn create_test_input(lines: &[String]) -> String {
 }
 
 fn create_test_runner(
-    config: &Config,
+    _config: &Config,
     template: &Option<String>,
     test: &Test,
 ) -> Result<String, failure::Error> {
