@@ -1,7 +1,7 @@
-extern crate skeptic;
+extern crate little_skeptic;
 
 fn main() {
-    skeptic::generate_doc_tests(&[
+    little_skeptic::generate_doc_tests(&[
         "README.md",
         "template-example.md",
         "tests/macro-use.md",

@@ -24,9 +24,9 @@ use cmark::{Event, Parser, Tag};
 /// List markdown files of `mdbook` which are under `<project dir>/book` usually:
 ///
 /// ```rust
-/// extern crate skeptic;
+/// extern crate little_skeptic;
 ///
-/// use skeptic::markdown_files_of_directory;
+/// use little_skeptic::markdown_files_of_directory;
 ///
 /// fn main() {
 ///     let _ = markdown_files_of_directory("book/");
@@ -59,9 +59,9 @@ pub fn markdown_files_of_directory(dir: &str) -> Vec<PathBuf> {
 /// Generates doc tests for the specified files.
 ///
 /// ```rust,no_run
-/// extern crate skeptic;
+/// extern crate little_skeptic;
 ///
-/// use skeptic::generate_doc_tests;
+/// use little_skeptic::generate_doc_tests;
 ///
 /// fn main() {
 ///     generate_doc_tests(&["README.md"]);
@@ -71,9 +71,9 @@ pub fn markdown_files_of_directory(dir: &str) -> Vec<PathBuf> {
 /// Or in case you want to add `mdbook` files:
 ///
 /// ```rust,no_run
-/// extern crate skeptic;
+/// extern crate little_skeptic;
 ///
-/// use skeptic::*;
+/// use little_skeptic::*;
 ///
 /// fn main() {
 ///     let mut mdbook_files = markdown_files_of_directory("book/");

@@ -1,20 +1,19 @@
 [package]
-authors = ["Brian Anderson <banderson@mozilla.com>",
-           "Michał Budzyński <budziq@gmail.com>"]
+authors = ["Markues Westerlind <marwes91@gmail.com>"]
 description = "Test your Rust markdown documentation via Cargo"
 license = "MIT/Apache-2.0"
-name = "skeptic"
-version = "0.13.2"
+name = "little-skeptic"
+version = "0.14.0"
 readme = "README.md"
-repository = "https://github.com/budziq/rust-skeptic"
-homepage = "https://github.com/budziq/rust-skeptic"
-documentation = "https://docs.rs/skeptic"
+repository = "https://github.com/Marwes/little-skeptic"
+homepage = "https://github.com/Marwes/little-skeptic"
+documentation = "https://docs.rs/little-skeptic"
 keywords = ["markdown", "documentation", "testing"]
 categories = ["development-tools", "development-tools::testing"]
 
 [badges]
-travis-ci = { repository = "budziq/rust-skeptic" }
-appveyor = { repository = "budziq/rust-skeptic" }
+travis-ci = { repository = "Marwes/little-skeptic" }
+appveyor = { repository = "Marwes/little-skeptic" }
 
 [dependencies]
 tempdir = "0.3.5"
@@ -38,5 +37,5 @@ version = "0.1.0"
 default-features = false
 
 [lib]
-name = "skeptic"
+name = "little_skeptic"
 path = "lib.rs"

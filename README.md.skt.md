@@ -1,4 +1,5 @@
 ```rust,skeptic-root-template
+extern crate little_skeptic;
 #[macro_use]
 extern crate serde_json;
 ```

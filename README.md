@@ -1,22 +1,21 @@
 # Be a Rust Documentation Skeptic
 
-[![Unix build status](https://travis-ci.org/budziq/rust-skeptic.svg?branch=master)](https://travis-ci.org/budziq/rust-skeptic)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/l1f74hon37wt2vce/branch/master?svg=true)](https://ci.appveyor.com/project/budziq/rust-skeptic/branch/master)
-[![crates.io](https://img.shields.io/crates/v/skeptic.svg)](https://crates.io/crates/skeptic)
-[![Documentation](https://docs.rs/skeptic/badge.svg)](https://docs.rs/skeptic)
+[![Unix build status](https://travis-ci.org/Marwes/little-skeptic.svg?branch=master)](https://travis-ci.org/Marwes/little-skeptic)
+[![crates.io](https://img.shields.io/crates/v/little-skeptic.svg)](https://crates.io/crates/little-skeptic)
+[![Documentation](https://docs.rs/little-skeptic/badge.svg)](https://docs.rs/little-skeptic)
 
 Test your Rust Markdown via Cargo.
 
 ## Getting started
 
-Put this in `Cargo.toml` to add the `skeptic` dependency:
+Put this in `Cargo.toml` to add the `little-skeptic` dependency:
 
 ```toml
 [build-dependencies]
-skeptic = "0.13"
+little-skeptic = "0.14"
 
 [dev-dependencies]
-skeptic = "0.13"
+little-skeptic = "0.14"
 ```
 
 Also in `Cargo.toml`, to the `[package]` section add:
@@ -32,11 +31,11 @@ of Markdown files.
 In `build.rs` write this to test all Rust code blocks in `README.md`:
 
 ```rust,no_run,skt-main
-extern crate skeptic;
+extern crate little_skeptic;
 
 fn main() {
     // generates doc tests for `README.md`.
-    skeptic::generate_doc_tests(&["README.md"]);
+    little_skeptic::generate_doc_tests(&["README.md"]);
 }
 ```
 
@@ -47,9 +46,9 @@ enumerating the markdown files in the specified directory. You can add
 more files to this list as you like:
 
 ```rust,no_run,skt-main
-extern crate skeptic;
+extern crate little_skeptic;
 
-use skeptic::*;
+use little_skeptic::*;
 
 fn main() {
     // Add all markdown files in directory "book/".
@@ -77,7 +76,7 @@ Rust Skeptic is not based on rustdoc. It behaves similarly in many
 cases, but not all. Here's the lowdown on the Skeptic system.
 
 *Note: [this `README.md` file itself is tested by Rust
-Skeptic](https://github.com/budziq/rust-skeptic/blob/master/build.rs).
+Skeptic](https://github.com/Marwes/little-skeptic/blob/master/build.rs).
 Because it is illustrating how to use markdown syntax, the markup on
 this document itself is funky, and so is the output below,
 particularly when illustrating Markdown's code fences
