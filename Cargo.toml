@@ -15,3 +15,5 @@ version = "1"
 # It is not needed for normal uses of Skeptic.
 [dependencies.little-skeptic]
 path = "src/skeptic"
+
+[workspace]

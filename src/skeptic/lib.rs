@@ -880,6 +880,7 @@ mod tests {
     fn test_markdown_files_of_directory() {
         let files = vec![
             "../../tests/hashtag-test.md",
+            "../../tests/macro-use.md",
             "../../tests/section-names.md",
             "../../tests/should-panic-test.md",
         ];
