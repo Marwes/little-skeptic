@@ -9,13 +9,13 @@ extern crate pulldown_cmark as cmark;
 extern crate serde_json;
 extern crate tempdir;
 
+use cmark::{Event, Parser, Tag};
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::{self, Error as IoError, Read, Write};
 use std::mem;
 use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-use cmark::{Event, Parser, Tag};
 
 /// Returns a list of markdown files under a directory.
 ///
@@ -85,52 +85,72 @@ pub fn generate_doc_tests<T: Clone>(docs: &[T])
 where
     T: AsRef<Path>,
 {
-    // This shortcut is specifically so examples in skeptic's on
-    // readme can call this function in non-build.rs contexts, without
-    // panicking below.
-    if docs.is_empty() {
-        return;
+    Config {
+        print_rerun_if_changed: true,
     }
-
-    let docs = docs.iter()
-        .cloned()
-        .map(|path| path.as_ref().to_str().unwrap().to_owned())
-        .filter(|d| !d.ends_with(".skt.md"))
-        .collect::<Vec<_>>();
-
-    // Inform cargo that it needs to rerun the build script if one of the skeptic files are
-    // modified
-    for doc in &docs {
-        println!("cargo:rerun-if-changed={}", doc);
-
-        let skt = format!("{}.skt.md", doc);
-        if Path::new(&skt).exists() {
-            println!("cargo:rerun-if-changed={}", skt);
-        }
-    }
-
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-
-    let mut out_file = PathBuf::from(out_dir.clone());
-    out_file.push("skeptic-tests.rs");
-
-    let config = Config {
-        root_dir: PathBuf::from(cargo_manifest_dir),
-        out_file: out_file,
-        docs: docs,
-    };
-
-    run(&config);
+    .generate_doc_tests(docs)
 }
 
-struct Config {
+#[derive(Default)]
+pub struct Config {
+    pub print_rerun_if_changed: bool,
+}
+
+impl Config {
+    pub fn generate_doc_tests<T: Clone>(&self, docs: &[T])
+    where
+        T: AsRef<Path>,
+    {
+        // This shortcut is specifically so examples in skeptic's on
+        // readme can call this function in non-build.rs contexts, without
+        // panicking below.
+        if docs.is_empty() {
+            return;
+        }
+
+        let docs = docs
+            .iter()
+            .cloned()
+            .map(|path| path.as_ref().to_str().unwrap().to_owned())
+            .filter(|d| !d.ends_with(".skt.md"))
+            .collect::<Vec<_>>();
+
+        if self.print_rerun_if_changed {
+            // Inform cargo that it needs to rerun the build script if one of the skeptic files are
+            // modified
+            for doc in &docs {
+                println!("cargo:rerun-if-changed={}", doc);
+
+                let skt = format!("{}.skt.md", doc);
+                if Path::new(&skt).exists() {
+                    println!("cargo:rerun-if-changed={}", skt);
+                }
+            }
+        }
+
+        let out_dir = env::var("OUT_DIR").unwrap();
+        let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+
+        let mut out_file = PathBuf::from(out_dir.clone());
+        out_file.push("skeptic-tests.rs");
+
+        let config = InternalConfig {
+            root_dir: PathBuf::from(cargo_manifest_dir),
+            out_file: out_file,
+            docs: docs,
+        };
+
+        run(&config);
+    }
+}
+
+struct InternalConfig {
     root_dir: PathBuf,
     out_file: PathBuf,
     docs: Vec<String>,
 }
 
-fn run(config: &Config) {
+fn run(config: &InternalConfig) {
     let tests = extract_tests(config).unwrap_or_else(|err| panic!("{}", err));
     emit_tests(config, tests).unwrap_or_else(|err| panic!("{}", err));
 }
@@ -156,7 +176,7 @@ struct DocTest {
     templates: HashMap<String, String>,
 }
 
-fn extract_tests(config: &Config) -> Result<DocTestSuite, IoError> {
+fn extract_tests(config: &InternalConfig) -> Result<DocTestSuite, IoError> {
     let mut doc_tests = Vec::new();
     for doc in &config.docs {
         let path = &mut config.root_dir.clone();
@@ -325,8 +345,6 @@ fn load_templates(path: &Path) -> Result<(HashMap<String, String>, Option<String
 }
 
 fn sanitize_test_name(s: &str) -> String {
-    #[allow(unused)]
-    use std::ascii::AsciiExt;
     s.to_ascii_lowercase()
         .chars()
         .map(|ch| {
@@ -408,7 +426,7 @@ struct CodeBlockInfo {
     root_template: bool,
 }
 
-fn emit_tests(config: &Config, suite: DocTestSuite) -> Result<(), failure::Error> {
+fn emit_tests(config: &InternalConfig, suite: DocTestSuite) -> Result<(), failure::Error> {
     let mut out = String::new();
 
     for doc_test in suite.doc_tests {
@@ -440,11 +458,11 @@ fn emit_tests(config: &Config, suite: DocTestSuite) -> Result<(), failure::Error
 /// documentation but include it for the purpose of playground links or skeptic
 /// testing.
 fn clean_omitted_line(line: &str) -> &str {
-    let trimmed = line.trim_left();
+    let trimmed = line.trim_start();
 
     if trimmed.starts_with("# ") {
         &trimmed[2..]
-    } else if trimmed.trim_right() == "#" {
+    } else if trimmed.trim_end() == "#" {
         // line consists of single "#" which might not be followed by newline on windows
         &trimmed[1..]
     } else {
@@ -461,7 +479,7 @@ fn create_test_input(lines: &[String]) -> String {
 }
 
 fn create_test_runner(
-    _config: &Config,
+    _config: &InternalConfig,
     template: &Option<String>,
     test: &Test,
 ) -> Result<String, failure::Error> {
@@ -522,20 +540,20 @@ pub mod rt {
     extern crate serde_json;
     extern crate walkdir;
 
-    use std::collections::HashMap;
     use std::collections::hash_map::Entry;
+    use std::collections::HashMap;
     use std::time::SystemTime;
 
-    use std::{self, env};
+    use std::ffi::OsStr;
     use std::fs::File;
     use std::io::{self, Write};
     use std::path::{Path, PathBuf};
     use std::process::Command;
-    use std::ffi::OsStr;
+    use std::{self, env};
     use tempdir::TempDir;
 
-    use self::walkdir::WalkDir;
     use self::serde_json::Value;
+    use self::walkdir::WalkDir;
 
     error_chain! {
         errors { Fingerprint }
@@ -617,7 +635,8 @@ pub mod rt {
         fn from_path<P: AsRef<Path>>(pth: P) -> Result<Fingerprint> {
             let pth = pth.as_ref();
 
-            let fname = pth.file_stem()
+            let fname = pth
+                .file_stem()
                 .and_then(OsStr::to_str)
                 .ok_or(ErrorKind::Fingerprint)?;
 
@@ -827,12 +846,14 @@ pub mod rt {
             io::stdout(),
             "{}",
             String::from_utf8(output.stdout).unwrap()
-        ).unwrap();
+        )
+        .unwrap();
         write!(
             io::stderr(),
             "{}",
             String::from_utf8(output.stderr).unwrap()
-        ).unwrap();
+        )
+        .unwrap();
         if !output.status.success() {
             panic!("Command failed:\n{:?}", command);
         }
@@ -843,8 +864,8 @@ pub mod rt {
 mod tests {
     extern crate unindent;
 
-    use super::*;
     use self::unindent::unindent;
+    use super::*;
 
     #[test]
     fn test_omitted_lines() {
@@ -1036,8 +1057,9 @@ mod tests {
     }
 
     fn get_lines(lines: String) -> Vec<String> {
-        lines.split('\n')
-            .map(|string_slice| format!("{}\n", string_slice))//restore line endings since they are removed by split.
+        lines
+            .split('\n')
+            .map(|string_slice| format!("{}\n", string_slice)) //restore line endings since they are removed by split.
             .collect()
     }
 }
