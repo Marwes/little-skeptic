@@ -9,13 +9,14 @@ extern crate pulldown_cmark as cmark;
 extern crate serde_json;
 extern crate tempdir;
 
-use cmark::{Event, Parser, Tag};
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::{self, Error as IoError, Read, Write};
 use std::mem;
 use std::path::{Path, PathBuf};
+
+use cmark::{Event, Parser, Tag};
 
 /// Returns a list of markdown files under a directory.
 ///
@@ -42,7 +43,7 @@ pub fn markdown_files_of_directory(dir: &str) -> Vec<PathBuf> {
     };
     let mut out = Vec::new();
 
-    for path in glob_with(&format!("{}/**/*.md", dir), &opts)
+    for path in glob_with(&format!("{}/**/*.md", dir), opts)
         .expect("Failed to read glob pattern")
         .filter_map(Result::ok)
     {
@@ -259,7 +260,7 @@ fn extract_tests_from_string(
                     if buf.is_empty() {
                         code_block_start = line_number;
                     }
-                    buf.push(text.into_owned());
+                    buf.extend(text.lines().map(|s| format!("{}\n", s)));
                 } else if let Buffer::Header(ref mut buf) = buffer {
                     buf.push_str(&*text);
                 }
@@ -555,11 +556,13 @@ pub mod rt {
     use self::serde_json::Value;
     use self::walkdir::WalkDir;
 
+    use failure::ResultExt as _;
+
     error_chain! {
         errors { Fingerprint }
         foreign_links {
             Io(std::io::Error);
-            Metadata(cargo_metadata::Error);
+            Metadata(failure::Compat<cargo_metadata::Error>);
             Json(serde_json::Error);
         }
     }
@@ -579,7 +582,10 @@ pub mod rt {
     impl LockedDeps {
         fn from_path<P: AsRef<Path>>(pth: P) -> Result<LockedDeps> {
             let pth = pth.as_ref().join("Cargo.toml");
-            let metadata = cargo_metadata::metadata_deps(Some(&pth), true)?;
+            let metadata = cargo_metadata::MetadataCommand::new()
+                .manifest_path(&pth)
+                .exec()
+                .compat()?;
             let workspace_members = metadata.workspace_members;
             let deps = metadata
                 .resolve
@@ -588,7 +594,8 @@ pub mod rt {
                 .into_iter()
                 .filter(|node| workspace_members.contains(&node.id))
                 .flat_map(|node| node.dependencies.into_iter())
-                .chain(workspace_members.clone());
+                .chain(workspace_members.clone())
+                .map(|x| x.to_string());
 
             Ok(LockedDeps {
                 dependencies: deps.collect(),
